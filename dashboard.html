@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Cupid - Dashboard</title>
+    <style>
+        body {
+            background-color: #141414;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            position: relative;
+        }
+
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 100px;
+            height: auto;
+        }
+
+        .logout-button, .foryou-button {
+            position: absolute;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: #8789FE;
+            color: #000;
+            text-decoration: none;
+            font-size: 16px;
+            border: 1px solid #8789FE;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-button:hover, .foryou-button:hover {
+            background-color: #6a6bd4;
+        }
+
+        .logout-button {
+            top: 20px;
+            right: 20px;
+        }
+
+        .foryou-button {
+            top: 20px;
+            left: 140px;
+        }
+
+        .container {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            position: relative;
+            text-align: center;
+        }
+
+        h1 {
+            color: #8789FE;
+            margin-bottom: 20px;
+        }
+
+        .user-details {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .user-details img {
+            border-radius: 10px;
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 15px;
+        }
+
+        .swipe-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .swipe-buttons button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #8789FE;
+            background-color: #2c2c2c;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .swipe-buttons button:hover {
+            background-color: #6a6bd4;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                width: 90%;
+            }
+
+            .swipe-buttons button {
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .logo {
+                width: 40px;
+            }
+
+            .logout-button, .foryou-button {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <img src="logo.png" alt="College Cupid Logo" class="logo">
+    <a href="#" class="logout-button" id="logoutBtn">Logout</a>
+    <a href="foryou.html" class="foryou-button">For You</a>
+    <div class="container">
+        <h1>Dashboard</h1>
+        <div id="userDetails" class="user-details">Loading...</div>
+        <div class="swipe-buttons">
+            <button id="prevUserBtn">Previous</button>
+            <button id="nextUserBtn">Next</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/pocketbase@0.19.0/dist/pocketbase.umd.js"></script>
+    <script>
+        const pb = new PocketBase('https://collegecupid.pockethost.io');
+
+        let users = [];
+        let currentIndex = 0;
+
+        async function loadUsers() {
+            try {
+                users = await pb.collection('users').getFullList({ sort: 'created' });
+                displayUser(currentIndex);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('userDetails').textContent = 'Error loading users. Please try again later.';
+            }
+        }
+
+        function displayUser(index) {
+            if (users.length === 0) return;
+
+            const user = users[index];
+            const userImage = pb.files.getUrl(user, user.id_card);
+
+            document.getElementById('userDetails').innerHTML = `
+                <img src="${userImage}" alt="Profile Image">
+                <p>${user.first_name} ${user.last_name} - ${user.college}</p>
+            `;
+        }
+
+        document.getElementById('prevUserBtn').addEventListener('click', () => {
+            currentIndex = currentIndex > 0 ? currentIndex - 1 : 0;
+            displayUser(currentIndex);
+        });
+
+        document.getElementById('nextUserBtn').addEventListener('click', () => {
+            currentIndex = (currentIndex + 1) % users.length;
+            displayUser(currentIndex);
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            pb.authStore.clear();
+            window.location.href = 'login.html';
+        });
+
+        loadUsers();
+    </script>
+</body>
+
+</html>
